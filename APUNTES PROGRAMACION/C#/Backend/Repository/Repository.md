@@ -1,0 +1,84 @@
+# Repository
+## Creamos el `DTO`
+~~~C#
+public class Person
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+~~~
+
+## Creamos la interfaz `IRepository`
+~~~C#
+public interface IRepository<T>
+{
+    Task<IEnumerable<T>> GetAllAsync();
+    Task<T> GetByIdAsync(int id);
+    Task<int> AddAsync(T entity);
+    Task<int> UpdateAsync(T entity);
+    Task<int> DeleteAsync(int id);
+}
+~~~
+
+## Creamos la clase `PersonRepository`
+~~~C#
+using Dapper;
+using System.Data;
+
+public class PersonRepository : IRepository<Person>
+{
+    private readonly IDbConnection _db;
+
+    public PersonRepository(IDbConnection db)
+    {
+        _db = db;
+    }
+...
+}
+~~~
+
+## `SELECT` => Creamos el método `GetAllAsync()`
+~~~C#
+public async Task<IEnumerable<Person>> GetAllAsync()
+{
+    var sql = "SELECT * FROM Person";
+    return await _db.QueryAsync<Person>(sql);
+}
+~~~
+
+## `SELECT`=> Creamos el método `GetByIdAsync()`
+~~~C#
+public async Task<Person> GetByIdAsync(int id)
+{
+    var sql = "SELECT * FROM Person WHERE Id = @Id";
+    return await _db.QueryFirstOrDefaultAsync<Person>(sql, new { Id = id });
+}
+~~~
+
+## `INSERT INTO`=> Creamos el método `AddAsync()`
+~~~C#
+public async Task<int> AddAsync(Person person)
+{
+    var sql = "INSERT INTO Person (Name, Age) VALUES (@Name, @Age)";
+    return await _db.ExecuteAsync(sql, person);
+}
+~~~
+
+## `UPDATE`=> Creamos el método `UpdateAsync()`
+~~~C#
+public async Task<int> UpdateAsync(Person person)
+{
+    var sql = "UPDATE Person SET Name = @Name, Age = @Age WHERE Id = @Id";
+    return await _db.ExecuteAsync(sql, person);
+}
+~~~
+
+### `DELETE`=> Creamos el método `DeleteAsync()`
+~~~C#
+public async Task<int> DeleteAsync(int id)
+{
+    var sql = "DELETE FROM Person WHERE Id = @Id";
+    return await _db.ExecuteAsync(sql, new { Id = id });
+}
+~~~
